@@ -20,5 +20,3 @@ app.use("/images/", static('../client/src/assets/products/'))
 
 app.use("/api/auth", authRoute);
 app.use("/api/products", productRoute);
-
-console.log("hello world")

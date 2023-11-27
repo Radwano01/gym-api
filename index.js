@@ -1,14 +1,18 @@
 const express = require("express");
 const app = express();
 
+require("dotenv").config()
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({extended: false}))
 
 const authRoute = require("./routes/auth.js").router;
 const productRoute = require("./routes/products.js").router;
 
-app.listen(5002, () => {
-  console.log("server connected at 5002");
+const PORT = process.env.PORT || 5002
+
+app.listen(PORT, () => {
+  console.log("server connected at:", PORT);
 });
 
 const cors = require("cors")

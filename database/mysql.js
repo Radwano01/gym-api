@@ -7,7 +7,6 @@ const db = sql.createConnection({
     password: process.env.PASSWORD,
     port: process.env.PORT,
     database: process.env.DATA_NAME,
-    connectTimeout: 10,
 })
 
 module.exports = {

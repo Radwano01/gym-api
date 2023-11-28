@@ -3,19 +3,17 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const db = require("../database/mysql");
 
-const register = async (req, res) => {
-  const newUser =
-    "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
-  const existEmail = "SELECT * FROM `gymauth` WHERE `email` = ?";
-  const name = req.body.name;
-  const email = req.body.email;
-  const password = req.body.password;
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const values = [name, email, hashedPassword];
-
+const register = (req, res) => {
   try{
-    db.query(existEmail, [email], (err, data) => {
+    const newUser = "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
+    const existEmail = "SELECT * FROM `gymauth` WHERE `email` = ?";
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+  
+    db.query(existEmail, [email], async(err, data) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const values = [name, email, hashedPassword];
       if (err) {
         return res.status(400).json(err);
       }
@@ -59,7 +57,7 @@ const register = async (req, res) => {
       }
     });
   }catch(err){
-    res.status(500).json(err)
+    res.status(400).json(err)
   }
 };
 

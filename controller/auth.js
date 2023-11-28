@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const db = require("../database/mysql");
 
-const register = async (req, res) => {
+const register =  (req, res) => {
   const newUser =
     "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
   const existEmail = "SELECT * FROM `gymauth` WHERE `email` = ?";
@@ -11,7 +11,7 @@ const register = async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword =  bcrypt.hash(password, 10);
   const values = [name, email, hashedPassword];
 
   db.query(existEmail, [email], (err, data) => {

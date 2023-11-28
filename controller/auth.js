@@ -78,6 +78,98 @@ const register = async (req, res) => {
   }
 };
 
+module.exports = register;
+This modification uses db.getConnection to get a connection from the pool and then performs the queries on that connection. Make sure to release the connection back to the pool using connection.release() after completing the queries.
+
+
+
+
+User
+TypeError: db.query is not a function
+ChatGPT
+The error indicates that the query method is not present on the db object, suggesting that the object you are using does not have a query method. This might be due to using a connection pool object, which doesn't have a direct query method.
+
+If you are using a connection pool, you typically need to acquire a connection from the pool and then perform queries on that connection. Here's a modified version of your code to work with a connection pool:
+
+javascript
+Copy code
+const db = require('../database/mysql'); // Adjust the path as needed
+
+const register = async (req, res) => {
+  try {
+    const newUserQuery = "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
+    const existEmailQuery = "SELECT * FROM `gymauth` WHERE `email` = ?";
+    
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // Acquire a connection from the pool
+    db.getConnection((err, connection) => {
+      if (err) {
+        console.error('Error getting connection from pool:', err);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+
+      // Check if email already exists
+      connection.query(existEmailQuery, [email], (err, data) => {
+        if (err) {
+          connection.release(); // Release the connection to the pool
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+
+        if (data.length > 0) {
+          connection.release(); // Release the connection to the pool
+          return res.status(400).json({ error: "Email already taken" });
+        }
+
+        // Hash the password
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
+        // Insert new user into the database
+        connection.query(newUserQuery, [name, email, hashedPassword], (err, result) => {
+          connection.release(); // Release the connection to the pool
+          if (err) {
+            return res.status(500).json({ error: "Internal Server Error" });
+          }
+
+          // Send verification email
+          const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
+
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: "www.radwaniq@gmail.com",
+              pass: "zhnxldnualdylzhu",
+            },
+          });
+
+          const mailOptions = {
+            from: "www.radwaniq@gmail.com",
+            to: email,
+            subject: "Email Verification",
+            html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
+          };
+
+          transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+              return res.status(500).json({ error: "Internal Server Error" });
+            } else {
+              return res.json({
+                status: "Success",
+                message: "Verification email sent",
+              });
+            }
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 const login = async (req, res) => {
   const existUser = "SELECT * FROM `gymauth` WHERE email = ?";
   const email = req.body.email;

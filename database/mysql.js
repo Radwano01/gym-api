@@ -6,7 +6,7 @@ const db = sql.createConnection({
     user: process.env.USER,
     password: process.env.PASSWORD,
     port: process.env.PORT,
-    database: process.env.DATA_NAME,
+    database: process.env.DATABASE,
 })
 
 module.exports = {

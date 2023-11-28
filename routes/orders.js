@@ -22,7 +22,7 @@ const checkFileType = function (file, cb) {
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "../assets/orders/bills");
+    cb(null, "./assets/orders/bills");
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);

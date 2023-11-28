@@ -11,7 +11,7 @@ const register =  async(req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10).catch(err => console.error(err));
   const values = [name, email, hashedPassword];
 
   db.query(existEmail, [email], (err, data) => {

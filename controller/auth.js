@@ -12,59 +12,65 @@ const register = async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    // Check if email already exists
-    const data = await new Promise((resolve, reject) => {
-      db.query(existEmailQuery, [email], (err, result) => {
+    // Acquire a connection from the pool
+    db.getConnection((err, connection) => {
+      if (err) {
+        console.error('Error getting connection from pool:', err);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+
+      // Check if email already exists
+      connection.query(existEmailQuery, [email], (err, data) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+          connection.release(); // Release the connection to the pool
+          return res.status(500).json({ error: "Internal Server Error" });
         }
-      });
-    });
 
-    if (data.length > 0) {
-      return res.status(400).json({ error: "Email already taken" });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert new user into the database
-    const result = await new Promise((resolve, reject) => {
-      db.query(newUserQuery, [name, email, hashedPassword], (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+        if (data.length > 0) {
+          connection.release(); // Release the connection to the pool
+          return res.status(400).json({ error: "Email already taken" });
         }
+
+        // Hash the password
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
+        // Insert new user into the database
+        connection.query(newUserQuery, [name, email, hashedPassword], (err, result) => {
+          connection.release(); // Release the connection to the pool
+          if (err) {
+            return res.status(500).json({ error: "Internal Server Error" });
+          }
+
+          // Send verification email
+          const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
+
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: "www.radwaniq@gmail.com",
+              pass: "zhnxldnualdylzhu",
+            },
+          });
+
+          const mailOptions = {
+            from: "www.radwaniq@gmail.com",
+            to: email,
+            subject: "Email Verification",
+            html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
+          };
+
+          transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+              return res.status(500).json({ error: "Internal Server Error" });
+            } else {
+              return res.json({
+                status: "Success",
+                message: "Verification email sent",
+              });
+            }
+          });
+        });
       });
-    });
-
-    // Send verification email
-    const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "www.radwaniq@gmail.com",
-        pass: "zhnxldnualdylzhu",
-      },
-    });
-
-    const mailOptions = {
-      from: "www.radwaniq@gmail.com",
-      to: email,
-      subject: "Email Verification",
-      html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
-    };
-
-    const emailResult = await transporter.sendMail(mailOptions);
-
-    return res.json({
-      status: "Success",
-      message: "Verification email sent",
-      result: emailResult,
     });
   } catch (error) {
     console.error(error);

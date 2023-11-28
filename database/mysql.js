@@ -9,6 +9,14 @@ const db = sql.createPool({
     database: process.env.DATABASE,
 })
 
+db.connect((err) => {
+    if (err) {
+      console.error('Error connecting to database:', err);
+      return;
+    }
+    console.log('Connected to database');
+});
+
 module.exports = {
     db
 }

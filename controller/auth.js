@@ -3,61 +3,72 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const db = require("../database/mysql");
 
-const register = (req, res) => {
-  try{
-    const newUser = "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
-    const existEmail = "SELECT * FROM `gymauth` WHERE `email` = ?";
+const register = async (req, res) => {
+  try {
+    const newUserQuery = "INSERT INTO `gymauth` (`name`, `email`, `password`) VALUES (?, ?, ?)";
+    const existEmailQuery = "SELECT * FROM `gymauth` WHERE `email` = ?";
+    
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
-  
-    db.query(existEmail, [email], async(err, data) => {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const values = [name, email, hashedPassword];
-      if (err) {
-        return res.status(400).json(err);
-      }
-      if (data.length > 0) {
-        return res.status(400).json({ error: "Email already taken" });
-      } else {
-        db.query(newUser, values, (err, data) => {
-          if (err) {
-            return res.status(400).json(err);
-          } else {
-            return res.status(200).json(data);
-          }
-        });
-        const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
 
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "www.radwaniq@gmail.com",
-            pass: "zhnxldnualdylzhu",
-          },
-        });
-
-        const mailOptions = {
-          from: "www.radwaniq@gmail.com",
-          to: email,
-          subject: "Email Verification",
-          html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
-        };
-
-        transporter.sendMail(mailOptions, (err, info) => {
-          if (err) {
-            return res.status(400).json(err);
-          } else {
-            return res.json({
-              Status: "Success",
-              Message: "Verification email sent",
-            });
-          }
-        });
-      }
+    // Check if email already exists
+    const data = await new Promise((resolve, reject) => {
+      db.query(existEmailQuery, [email], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
     });
-  }catch{
-    res.status(400).json("Internal Server Error")
+
+    if (data.length > 0) {
+      return res.status(400).json({ error: "Email already taken" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user into the database
+    const result = await new Promise((resolve, reject) => {
+      db.query(newUserQuery, [name, email, hashedPassword], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+
+    // Send verification email
+    const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "www.radwaniq@gmail.com",
+        pass: "zhnxldnualdylzhu",
+      },
+    });
+
+    const mailOptions = {
+      from: "www.radwaniq@gmail.com",
+      to: email,
+      subject: "Email Verification",
+      html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
+    };
+
+    const emailResult = await transporter.sendMail(mailOptions);
+
+    return res.json({
+      status: "Success",
+      message: "Verification email sent",
+      result: emailResult,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

@@ -10,7 +10,7 @@ const router = require("express").Router();
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "../client/src/assets/products");
+    cb(null, "../assets/products");
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + file.originalname);

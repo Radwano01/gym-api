@@ -8,6 +8,7 @@ app.use(express.urlencoded({extended: false}))
 
 const authRoute = require("./routes/auth.js").router;
 const productRoute = require("./routes/products.js").router;
+const ordersRoute = require("./routes/orders.js").router;
 
 const PORT = process.env.PORT || 5002
 
@@ -24,3 +25,4 @@ app.use("/images/", static('../client/src/assets/products/'))
 
 app.use("/api/auth", authRoute);
 app.use("/api/products", productRoute);
+app.use("/api/orders", ordersRoute)

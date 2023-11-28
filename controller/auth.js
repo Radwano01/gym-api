@@ -45,15 +45,15 @@ const register =  async(req, res) => {
         html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
       };
 
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-          return res.status(400).json(err);
-        } else {
+      transporter.sendMail(mailOptions)
+        .then(info => {
           return res.json({
             Status: "Success",
             Message: "Verification email sent",
           });
-        }
+        })
+        .catch(err => {
+          return res.status(400).json(err);
       });
     }
   });

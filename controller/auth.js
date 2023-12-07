@@ -38,18 +38,18 @@ const register = async (req, res) => {
       });
     });
 
-    const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
+    const verification = jwt.sign({ email }, process.env.TOKEN, { expiresIn: "1d" });
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: process.env.SERVICE,
       auth: {
-        user: "www.radwaniq@gmail.com",
-        pass: "zhnxldnualdylzhu",
+        user: process.env.EMAIL,
+        pass: process.env.PASS,
       },
     });
 
     const mailOptions = {
-      from: "www.radwaniq@gmail.com",
+      from: process.env.EMAIL,
       to: email,
       subject: "Email Verification",
       html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
@@ -88,7 +88,7 @@ const login = async (req, res) => {
         if (storedisVerified === 1) {
           const compare = await bcrypt.compare(password, storedPassword);
           if (compare) {
-            const token = jwt.sign({ id: data[0].id }, "GymToken");
+            const token = jwt.sign({ id: data[0].id }, process.env.TOKEN);
             res.json({ token, id: data[0].id, email, name });
           } else {
             res.status(400).json({ error: "password or email is wrong" });
@@ -105,7 +105,7 @@ const verifyEmail = async (req, res) => {
   const { email, verification } = req.params;
   const updataUser = "UPDATE `gymauth` SET `isVerified` = 1 WHERE `email` = ?";
   try {
-    const verify = jwt.verify(verification, "GymToken");
+    const verify = jwt.verify(verification, process.env.TOKEN);
 
     if (verify.email === email) {
       db.query(updataUser, [email], (err, data) => {
@@ -126,22 +126,22 @@ const verifyEmail = async (req, res) => {
 const forgotPassword = (req, res) => {
   const getEmail = "SELECT * FROM `gymauth` WHERE `email` = ?";
   const email = req.body.email;
-  const verification = jwt.sign({ email }, "GymToken", { expiresIn: "1d" });
+  const verification = jwt.sign({ email }, process.env.TOKEN, { expiresIn: "1d" });
   db.query(getEmail, [email], (err, data) => {
     if (err) {
       res.status(400).json({ err });
     } else {
       res.status(200).json({ success: "check your gmail" });
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        service: process.env.SERVICE,
         auth: {
-          user: "www.radwaniq@gmail.com",
-          pass: "zhnxldnualdylzhu",
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
         },
       });
 
       const mailOptions = {
-        from: "www.radwaniq@gmail.com",
+        from: process.env.EMAIL,
         to: email,
         subject: "Reset Password Link",
         html: `Click the following link to reset your email password: <p><a href="http://localhost:3000/reset-password/${data[0].email}/${verification}">Click here to proceed</a></p>`,
@@ -169,7 +169,7 @@ const resetPassword = async(req, res) => {
   const newPassword = req.body.password;
   const Password = await bcrypt.hash(newPassword, 10);
 
-  const verify =jwt.verify(verification, "GymToken");
+  const verify =jwt.verify(verification, process.env.TOKEN);
   const values = [
     Password,
     email

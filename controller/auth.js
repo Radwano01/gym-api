@@ -52,7 +52,7 @@ const register = async (req, res) => {
       from: process.env.EMAIL,
       to: email,
       subject: "Email Verification",
-      html: `Click the following link to verify your email: <p><a href="http://localhost:3000/verify/${email}/${verification}">Click here to proceed</a></p>`,
+      html: `Click the following link to verify your email: <p><a href="${process.env.API}/verify/${email}/${verification}">Click here to proceed</a></p>`,
     };
 
     const emailResult = await transporter.sendMail(mailOptions);
@@ -69,7 +69,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const existUser = "SELECT * FROM `gymauth` WHERE email = ?";
+  const existUser = "SELECT * FROM `gymauth` WHERE `email` = ?";
   const email = req.body.email;
   const password = req.body.password;
 
@@ -144,7 +144,7 @@ const forgotPassword = (req, res) => {
         from: process.env.EMAIL,
         to: email,
         subject: "Reset Password Link",
-        html: `Click the following link to reset your email password: <p><a href="http://localhost:3000/reset-password/${data[0].email}/${verification}">Click here to proceed</a></p>`,
+        html: `Click the following link to reset your email password: <p><a href="${process.env.API}/reset-password/${data[0].email}/${verification}">Click here to proceed</a></p>`,
       };
 
       transporter.sendMail(mailOptions, (err, info) => {

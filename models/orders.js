@@ -9,6 +9,10 @@ const uploadBill = new mongoose.Schema({
         type:String,
         required:true
     },
+    code:{
+        type:String,
+        require:true,
+    },
     bill:{
         type:[String],
         required:true

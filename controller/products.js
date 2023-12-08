@@ -43,36 +43,48 @@ const getProduct = (req, res) => {
 
   db.query(getProducts, async (err, data) => {
     if (err) {
-      res.status(400).json(err);
+      console.error("Error fetching products:", err);
+      res.status(500).json({ error: 'Internal Server Error' });
     } else {
-      const promises = data.map(async (product) => {
-        const productName = product.p_name;
-        const images = await productsModel.find({ name: productName });
-        const imageOne = images[0].imageone[0]
-        const imageTwo = images[0].imagetwo[0]
-        if(imageOne && imageTwo){
-          return {
-            p_id: product.p_id,
-            p_name: product.p_name,
-            p_price: product.p_price,
-            imageone: imageOne,
-            imagetwo: imageTwo,
-            p_category: product.p_category,
-            p_sizes: product.p_sizes,
-            p_colors: product.p_colors,
-            p_arms: product.p_arms,
-            code: product.p_code
-          };
-        }else{
-          res.status(400).json("wrong with the image fetch")
-        }
-      });
-      const resolvedData = await Promise.all(promises);
+      try {
+        const promises = data.map(async (product) => {
+          const productName = product.p_name;
+          const images = await productsModel.find({ name: productName });
 
-      res.status(200).json( resolvedData );
+          if (images && images.length > 0) {
+            const imageOne = images[0].imageone[0];
+            const imageTwo = images[0].imagetwo[0];
+
+            return {
+              p_id: product.p_id,
+              p_name: product.p_name,
+              p_price: product.p_price,
+              imageone: imageOne,
+              imagetwo: imageTwo,
+              p_category: product.p_category,
+              p_sizes: product.p_sizes,
+              p_colors: product.p_colors,
+              p_arms: product.p_arms,
+              code: product.p_code,
+            };
+          } else {
+            console.error("No images found for product:", productName);
+            return null;
+          }
+        });
+
+        const resolvedData = await Promise.all(promises);
+        const filteredData = resolvedData.filter((item) => item !== null);
+
+        res.status(200).json(filteredData);
+      } catch (error) {
+        console.error("Error processing products:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     }
   });
 };
+
 
 
 const getSingleProduct = (req, res) => {

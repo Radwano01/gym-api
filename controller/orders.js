@@ -4,7 +4,7 @@ const productsModel = require("../models/products");
 
 const addOrder = (req, res) => {
   const addOrders =
-    "INSERT INTO `orders` (`o_userid`, `o_name`,`o_email`, `o_price`, `o_items`,`o_status`,`o_address`, `o_date`) VALUES (?,?,?,?,?,?,?,?)";
+    "INSERT INTO `orders` (`o_userid`, `o_name`, `o_email`, `o_price`, `o_items`, `o_status`, `o_address`, `o_date`) VALUES (?,?,?,?,?,?,?,?)";
 
   const values = [
     req.body.userID,
@@ -19,29 +19,30 @@ const addOrder = (req, res) => {
 
   db.query(addOrders, values, async (err, data) => {
     if (err) {
-      res.status(400).json(err);
-    } else {
-      const clientName = req.body.name;
-      const clientEmail = req.body.email;
-      const clientBill = req.body.bill;
-      const clientCode = req.body.code;
-      await ordersModel
-        .create({
-          name: clientName,
-          email: clientEmail,
-          code: clientCode,
-          bill: clientBill,
-        })
-        .then(() => {
-          res.status(200).json("bill uploaded");
-        })
-        .catch((err) => {
-          console.error("MongoDB error:", err);
-          res.status(400).json({ error: "bill upload failed", details: err });
-        });
+      console.error("SQL error:", err);
+      return res.status(400).json({ error: "Order creation failed", details: err });
+    }
+
+    const clientName = req.body.name;
+    const clientEmail = req.body.email;
+    const clientBill = req.body.bill;
+    const clientCode = req.body.code;
+
+    try {
+      await ordersModel.create({
+        name: clientName,
+        email: clientEmail,
+        code: clientCode,
+        bill: clientBill,
+      });
+      res.status(200).json("Order and bill uploaded successfully");
+    } catch (mongoErr) {
+      console.error("MongoDB error:", mongoErr);
+      res.status(400).json({ error: "Bill upload failed", details: mongoErr });
     }
   });
 };
+
 
 const getOrders = (req, res) => {
   const getOrders = "SELECT * FROM `orders`";

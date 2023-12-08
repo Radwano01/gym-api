@@ -43,7 +43,6 @@ const getProduct = (req, res) => {
 
   db.query(getProducts, async (err, data) => {
     if (err) {
-      console.error("Error fetching products:", err);
       res.status(500).json({ error: 'Internal Server Error' });
     } else {
       try {
@@ -68,7 +67,6 @@ const getProduct = (req, res) => {
               code: product.p_code,
             };
           } else {
-            console.error("No images found for product:", productName);
             return null;
           }
         });
@@ -78,7 +76,6 @@ const getProduct = (req, res) => {
 
         res.status(200).json(filteredData);
       } catch (error) {
-        console.error("Error processing products:", error);
         res.status(500).json({ error: 'Internal Server Error' });
       }
     }

@@ -13,6 +13,10 @@ const uploadImage = new mongoose.Schema({
     imagetwo:{
         type:[String],
         required:true,
+    },
+    code:{
+        type:Number,
+        require:true,
     }
 })
 

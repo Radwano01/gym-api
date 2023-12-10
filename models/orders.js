@@ -10,7 +10,7 @@ const uploadBill = new mongoose.Schema({
         required:true
     },
     code:{
-        type:String,
+        type:Number,
         require:true,
     },
     bill:{

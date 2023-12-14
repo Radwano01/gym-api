@@ -1,4 +1,4 @@
-const { addOrder, getOrders, getSingleOrder, updateStatus, deleteOrder, getSingleOrderImages } = require("../controller/orders");
+const { addOrder, getOrders, getSingleOrder, updateStatus, deleteOrder, getSingleOrderImages, getOrderByCode } = require("../controller/orders");
 
 const router = require("express").Router();
 

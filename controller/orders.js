@@ -115,6 +115,21 @@ const updateStatus = (req, res) => {
   });
 };
 
+const getOrderByCode = (req,res)=>{
+  const {code} = req.body;
+  const getOrder = "SELECT * FROM `orders` WHERE `o_code`=?"
+  const values = [
+    code,
+  ]
+  db.query(getOrder, values, (err,data)=>{
+    if(err){
+      res.status(400).json(err)
+    }else{
+      res.status(200).json(data)
+    }
+  })
+}
+
 module.exports = {
   addOrder,
   getOrders,
@@ -122,4 +137,5 @@ module.exports = {
   getSingleOrderImages,
   updateStatus,
   deleteOrder,
+  getOrderByCode,
 };

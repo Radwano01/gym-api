@@ -8,5 +8,6 @@ router.get("/get-single-order/:id", getSingleOrder)
 router.get('/get-single-order-images', getSingleOrderImages)
 router.put("/change-status/:id", updateStatus)
 router.post("/delete-order/:id", deleteOrder)
+router.get("/get-order-by-code", getOrderByCode)
 
 module.exports = {router}

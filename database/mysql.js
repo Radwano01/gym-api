@@ -1,7 +1,7 @@
 const sql = require("mysql")
 require("dotenv").config()
 
-const db = mysql.createConnection({
+const db = sql.createConnection({
   host: process.env.HOST,
   user: process.env.USER,
   password: process.env.PASSWORD,
